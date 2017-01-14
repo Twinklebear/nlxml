@@ -62,10 +62,11 @@ Contour read_contour(const tinyxml2::XMLElement *e) {
 	}
 	return c;
 }
-Branch read_branch(const tinyxml2::XMLElement *e) {
+Branch read_branch(const tinyxml2::XMLElement *e, const size_t branch_from) {
 	using namespace tinyxml2;
 	// TODO: Need to recurse on branches
 	Branch b;
+	b.branch_from = branch_from;
 	b.leaf = e->Attribute("leaf");
 	for (const XMLElement *it = e->FirstChildElement(); it != nullptr; it = it->NextSiblingElement()) {
 		if (std::strcmp(it->Name(), "point") == 0) {
@@ -73,7 +74,7 @@ Branch read_branch(const tinyxml2::XMLElement *e) {
 		} else if (std::strcmp(it->Name(), "marker") == 0) {
 			b.markers.push_back(read_marker(it));
 		} else if (std::strcmp(it->Name(), "branch") == 0) {
-			b.branches.push_back(read_branch(it));
+			b.branches.push_back(read_branch(it, b.points.size() - 1));
 		} else {
 			std::cout << "Warning: branch had unrecognized tag '" << it->Name() << "'\n";
 		}
@@ -92,7 +93,7 @@ Tree read_tree(const tinyxml2::XMLElement *e) {
 		} else if (std::strcmp(it->Name(), "marker") == 0) {
 			t.markers.push_back(read_marker(it));
 		} else if (std::strcmp(it->Name(), "branch") == 0) {
-			t.branches.push_back(read_branch(it));
+			t.branches.push_back(read_branch(it, t.points.size() - 1));
 		} else {
 			std::cout << "Warning: tree had unrecognized tag '" << it->Name() << "'\n";
 		}
