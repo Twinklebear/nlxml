@@ -37,8 +37,6 @@ Marker read_marker(const tinyxml2::XMLElement *e) {
 	for (const XMLElement *it = e->FirstChildElement(); it != nullptr; it = it->NextSiblingElement()) {
 		if (std::strcmp(it->Name(), "point") == 0) {
 			m.points.push_back(read_point(it));
-		} else {
-			std::cout << "Warning: marker had unrecognized tag '" << it->Name() << "'\n";
 		}
 	}
 	return m;
@@ -56,8 +54,6 @@ Contour read_contour(const tinyxml2::XMLElement *e) {
 			c.points.push_back(read_point(it));
 		} else if (std::strcmp(it->Name(), "marker") == 0) {
 			c.markers.push_back(read_marker(it));
-		} else {
-			std::cout << "Warning: contour had unrecognized tag '" << it->Name() << "'\n";
 		}
 	}
 	return c;
@@ -67,7 +63,11 @@ Branch read_branch(const tinyxml2::XMLElement *e, const size_t branch_from) {
 	// TODO: Need to recurse on branches
 	Branch b;
 	b.branch_from = branch_from;
-	b.leaf = e->Attribute("leaf");
+	if (e->Attribute("leaf")) {
+		b.leaf = e->Attribute("leaf");
+	} else {
+		b.leaf = "Unspecified";
+	}
 	for (const XMLElement *it = e->FirstChildElement(); it != nullptr; it = it->NextSiblingElement()) {
 		if (std::strcmp(it->Name(), "point") == 0) {
 			b.points.push_back(read_point(it));
@@ -75,8 +75,6 @@ Branch read_branch(const tinyxml2::XMLElement *e, const size_t branch_from) {
 			b.markers.push_back(read_marker(it));
 		} else if (std::strcmp(it->Name(), "branch") == 0) {
 			b.branches.push_back(read_branch(it, b.points.size() - 1));
-		} else {
-			std::cout << "Warning: branch had unrecognized tag '" << it->Name() << "'\n";
 		}
 	}
 	return b;
@@ -94,8 +92,6 @@ Tree read_tree(const tinyxml2::XMLElement *e) {
 			t.markers.push_back(read_marker(it));
 		} else if (std::strcmp(it->Name(), "branch") == 0) {
 			t.branches.push_back(read_branch(it, t.points.size() - 1));
-		} else {
-			std::cout << "Warning: tree had unrecognized tag '" << it->Name() << "'\n";
 		}
 	}
 	return t;
@@ -116,8 +112,6 @@ NeuronData import_file(const std::string &fname) {
 			data.trees.push_back(read_tree(e));
 		} else if (std::strcmp(e->Name(), "marker") == 0) {
 			data.markers.push_back(read_marker(e));
-		} else {
-			std::cout << "Warning: " << fname << " ignoring " << e->Name() << " entry\n";
 		}
 	}
 	return data;
