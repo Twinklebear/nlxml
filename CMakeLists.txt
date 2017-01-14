@@ -18,3 +18,10 @@ endif()
 
 add_subdirectory(src)
 
+if (NLXML_VL_PLUGIN)
+	get_plugin_name(plugin_name "nlxml")
+	add_library(${plugin_name} MODULE nlxml_plugin.cpp)
+	target_link_libraries(${plugin_name} vl nlxml)
+	install(TARGETS ${plugin_name} DESTINATION bin)
+endif()
+

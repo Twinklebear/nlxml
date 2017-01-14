@@ -1,5 +1,6 @@
 #include <string>
 #include <iomanip>
+#include <algorithm>
 #include <iostream>
 #include "tinyxml2.h"
 #include "nlxml.h"
@@ -20,9 +21,9 @@ Point read_point(const tinyxml2::XMLElement *e) {
 Color parse_color(const std::string &str) {
 	// The color strings in the file are #RRGGBB
 	Color c;
-	c.r = std::stoul(str.substr(1, 2), nullptr, 16) / 255.0;
-	c.g = std::stoul(str.substr(3, 2), nullptr, 16) / 255.0;
-	c.b = std::stoul(str.substr(5, 2), nullptr, 16) / 255.0;
+	c.r = std::stoul(str.substr(1, 2), nullptr, 16) / 255.f;
+	c.g = std::stoul(str.substr(3, 2), nullptr, 16) / 255.f;
+	c.b = std::stoul(str.substr(5, 2), nullptr, 16) / 255.f;
 	return c;
 }
 Marker read_marker(const tinyxml2::XMLElement *e) {
