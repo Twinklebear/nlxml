@@ -9,10 +9,14 @@ namespace nlxml {
 
 struct Point {
 	float x, y, z, d;
+
+	Point(float x = 0, float y = 0, float z = 0, float d = 0);
 };
 
 struct Color {
-	uint8_t r, g, b;
+	float r, g, b;
+
+	Color(float r = 0, float g = 0, float b = 0);
 };
 
 struct Marker {
@@ -36,6 +40,7 @@ struct Branch {
 	std::string leaf;
 	std::vector<Point> points;
 	std::vector<Marker> markers;
+	std::vector<Branch> branches;
 };
 
 struct Tree {
@@ -73,4 +78,8 @@ NeuronData import_file(const std::string &fname);
 
 std::ostream& operator<<(std::ostream &os, const nlxml::Point &p);
 std::ostream& operator<<(std::ostream &os, const nlxml::Color &c);
+std::ostream& operator<<(std::ostream &os, const nlxml::Branch &b);
+std::ostream& operator<<(std::ostream &os, const nlxml::Tree &t);
+std::ostream& operator<<(std::ostream &os, const nlxml::Contour &c);
+std::ostream& operator<<(std::ostream &os, const nlxml::Marker &m);
 
