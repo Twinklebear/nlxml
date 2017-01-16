@@ -58,11 +58,10 @@ Contour read_contour(const tinyxml2::XMLElement *e) {
 	}
 	return c;
 }
-Branch read_branch(const tinyxml2::XMLElement *e, const size_t branch_from) {
+Branch read_branch(const tinyxml2::XMLElement *e) {
 	using namespace tinyxml2;
 	// TODO: Need to recurse on branches
 	Branch b;
-	b.branch_from = branch_from;
 	if (e->Attribute("leaf")) {
 		b.leaf = e->Attribute("leaf");
 	} else {
@@ -74,7 +73,7 @@ Branch read_branch(const tinyxml2::XMLElement *e, const size_t branch_from) {
 		} else if (std::strcmp(it->Name(), "marker") == 0) {
 			b.markers.push_back(read_marker(it));
 		} else if (std::strcmp(it->Name(), "branch") == 0) {
-			b.branches.push_back(read_branch(it, b.points.size() - 1));
+			b.branches.push_back(read_branch(it));
 		}
 	}
 	return b;
@@ -91,7 +90,7 @@ Tree read_tree(const tinyxml2::XMLElement *e) {
 		} else if (std::strcmp(it->Name(), "marker") == 0) {
 			t.markers.push_back(read_marker(it));
 		} else if (std::strcmp(it->Name(), "branch") == 0) {
-			t.branches.push_back(read_branch(it, t.points.size() - 1));
+			t.branches.push_back(read_branch(it));
 		}
 	}
 	return t;

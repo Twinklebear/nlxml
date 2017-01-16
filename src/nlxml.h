@@ -38,8 +38,6 @@ struct Branch {
 	// Leaf attrib is the ending type of the branch.
 	// One of: Normal, High, Low, Incomplete, Origin Midpoint
 	std::string leaf;
-	// The point in the parent tree this branch starts from
-	size_t branch_from;
 	std::vector<Point> points;
 	std::vector<Marker> markers;
 	std::vector<Branch> branches;
@@ -52,6 +50,7 @@ struct Tree {
 	// Except that cell bodies are in the file as contours, not trees.
 	std::string type;
 	// TODO: What does the leaf attrib mean?
+	// One of: Normal, High, Low, Incomplete, Origin Midpoint
 	std::string leaf;
 	std::vector<Point> points;
 	std::vector<Branch> branches;
