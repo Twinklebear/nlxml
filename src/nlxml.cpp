@@ -153,7 +153,7 @@ void write_contour(const Contour &contour, tinyxml2::XMLDocument &doc, tinyxml2:
 
 	for (auto p : contour.points)
 		write_point(p, doc, e);
-	for (auto m : contour.markers)
+	for (auto &m : contour.markers)
 		write_marker(m, doc, e);
 
 	parent->InsertEndChild(e);
@@ -164,9 +164,9 @@ void write_branch(const Branch &branch, tinyxml2::XMLDocument &doc, tinyxml2::XM
 
 	for (auto p : branch.points)
 		write_point(p, doc, e);
-	for (auto b : branch.branches)
+	for (auto &b : branch.branches)
 		write_branch(b, doc, e);
-	for (auto m : branch.markers)
+	for (auto &m : branch.markers)
 		write_marker(m, doc, e);
 
 	parent->InsertEndChild(e);
@@ -179,9 +179,9 @@ void write_tree(const Tree &tree, tinyxml2::XMLDocument &doc, tinyxml2::XMLEleme
 
 	for (auto p : tree.points)
 		write_point(p, doc, e);
-	for (auto b : tree.branches)
+	for (auto &b : tree.branches)
 		write_branch(b, doc, e);
-	for (auto m : tree.markers)
+	for (auto &m : tree.markers)
 		write_marker(m, doc, e);
 
 	parent->InsertEndChild(e);
@@ -200,6 +200,10 @@ void export_file(const NeuronData &data, const std::string &fname) {
 
 	for (auto &t : data.trees)
 		write_tree(t, doc, mbf);
+	for (auto &c : data.contours)
+		write_contour(c, doc, mbf);
+	for (auto &m : data.markers)
+		write_marker(m, doc, mbf);
 
 	doc.SaveFile(fname.c_str());
 }
