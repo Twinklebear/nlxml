@@ -116,6 +116,94 @@ NeuronData import_file(const std::string &fname) {
 	return data;
 }
 
+
+// exporting to xml
+void write_point(const Point &p, tinyxml2::XMLDocument &doc, tinyxml2::XMLElement *const parent) {
+	tinyxml2::XMLElement *const e = doc.NewElement("point");
+	e->SetAttribute("x", p.x);
+	e->SetAttribute("y", p.y);
+	e->SetAttribute("z", p.z);
+	e->SetAttribute("d", p.d);
+
+	parent->InsertEndChild(e);
+}
+std::string color_to_string(const Color &c) {
+	char buffer[8]; // #RRGGBB hex
+	snprintf(buffer, sizeof buffer, "#%02X%02X%02X", (uint8_t)(c.r*255), (uint8_t)(c.g*255), (uint8_t)(c.b*255));
+	return std::string(buffer);
+}
+void write_marker(const Marker &marker, tinyxml2::XMLDocument &doc, tinyxml2::XMLElement *const parent) {
+	tinyxml2::XMLElement *const e = doc.NewElement("marker");
+	e->SetAttribute("type", marker.type.c_str());
+	e->SetAttribute("name", marker.name.c_str());
+	e->SetAttribute("color", color_to_string(marker.color).c_str());
+	e->SetAttribute("varicosity", marker.varicosity);
+
+	for (auto p : marker.points)
+		write_point(p, doc, e);
+
+	parent->InsertEndChild(e);
+}
+void write_contour(const Contour &contour, tinyxml2::XMLDocument &doc, tinyxml2::XMLElement *const parent) {
+	tinyxml2::XMLElement *const e = doc.NewElement("marker");
+	e->SetAttribute("name", contour.name.c_str());
+	e->SetAttribute("shape", contour.shape.c_str());
+	e->SetAttribute("color", color_to_string(contour.color).c_str());
+	e->SetAttribute("closed", contour.closed);
+
+	for (auto p : contour.points)
+		write_point(p, doc, e);
+	for (auto m : contour.markers)
+		write_marker(m, doc, e);
+
+	parent->InsertEndChild(e);
+}
+void write_branch(const Branch &branch, tinyxml2::XMLDocument &doc, tinyxml2::XMLElement *const parent) {
+	tinyxml2::XMLElement *const e = doc.NewElement("branch");
+	e->SetAttribute("leaf", branch.leaf.c_str());
+
+	for (auto p : branch.points)
+		write_point(p, doc, e);
+	for (auto b : branch.branches)
+		write_branch(b, doc, e);
+	for (auto m : branch.markers)
+		write_marker(m, doc, e);
+
+	parent->InsertEndChild(e);
+}
+void write_tree(const Tree &tree, tinyxml2::XMLDocument &doc, tinyxml2::XMLElement *const parent) {
+	tinyxml2::XMLElement *const e = doc.NewElement("tree");
+	e->SetAttribute("color", color_to_string(tree.color).c_str());
+	e->SetAttribute("type", tree.type.c_str());
+	e->SetAttribute("leaf", tree.leaf.c_str());
+
+	for (auto p : tree.points)
+		write_point(p, doc, e);
+	for (auto b : tree.branches)
+		write_branch(b, doc, e);
+	for (auto m : tree.markers)
+		write_marker(m, doc, e);
+
+	parent->InsertEndChild(e);
+}
+void export_file(const NeuronData &data, const std::string &fname) {
+	using namespace tinyxml2;
+	XMLDocument doc;
+	doc.LinkEndChild(doc.NewDeclaration());
+
+	// MBF meta information
+	XMLElement *const mbf = doc.NewElement("mbf");
+	mbf->SetAttribute("version", "4.0");
+	mbf->SetAttribute("xmlns", "http://www.mbfbioscience.com/2007/neurolucida");
+	mbf->SetAttribute("xmlns:nl", "http://www.mbfbioscience.com/2007/neurolucida");
+	doc.LinkEndChild(mbf);
+
+	for (auto &t : data.trees)
+		write_tree(t, doc, mbf);
+
+	doc.SaveFile(fname.c_str());
+}
+
 }
 
 std::ostream& operator<<(std::ostream &os, const nlxml::Point &p) {

@@ -74,6 +74,8 @@ struct NeuronData {
 
 NeuronData import_file(const std::string &fname);
 
+void export_file(const NeuronData &data, const std::string &fname);
+
 }
 
 std::ostream& operator<<(std::ostream &os, const nlxml::Point &p);
