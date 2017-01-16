@@ -3,7 +3,7 @@ project(NLXML)
 
 # Bump up warning levels appropriately for each compiler
 if (UNIX OR APPLE OR MINGW)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -std=c++14 -m64 -mf16c")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -std=c++14 -m64")
 	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG}")
 	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE} -O3")
 elseif (MSVC)
@@ -20,7 +20,7 @@ add_subdirectory(src)
 
 if (NLXML_VL_PLUGIN)
 	get_plugin_name(plugin_name "nlxml")
-	add_library(${plugin_name} MODULE nlxml_plugin.cpp)
+	add_library(${plugin_name} MODULE nlxml_plugin.cpp marker_renderer.cpp)
 	target_link_libraries(${plugin_name} vl nlxml)
 	install(TARGETS ${plugin_name} DESTINATION bin)
 endif()
