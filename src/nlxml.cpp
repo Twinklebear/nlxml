@@ -145,7 +145,7 @@ void write_marker(const Marker &marker, tinyxml2::XMLDocument &doc, tinyxml2::XM
 	parent->InsertEndChild(e);
 }
 void write_contour(const Contour &contour, tinyxml2::XMLDocument &doc, tinyxml2::XMLElement *const parent) {
-	tinyxml2::XMLElement *const e = doc.NewElement("marker");
+	tinyxml2::XMLElement *const e = doc.NewElement("contour");
 	e->SetAttribute("name", contour.name.c_str());
 	e->SetAttribute("shape", contour.shape.c_str());
 	e->SetAttribute("color", color_to_string(contour.color).c_str());
