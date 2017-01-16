@@ -28,9 +28,8 @@ struct Marker {
 	// Varicosity is a specific type of synaps so you may want to tag a marker
 	// as referring to a varicosity specifically.
 	bool varicosity;
-	// TODO: The markers have different numbers of points depending on their type.
-	// It might be the min-max points of their bounding rect or the center of
-	// the glyph?
+	// Each point in the list is the center point of a location that the marker
+	// is placed at.
 	std::vector<Point> points;
 };
 
