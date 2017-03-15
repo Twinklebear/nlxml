@@ -126,9 +126,7 @@ NeuronData import_file(const std::string &fname) {
 		if (!e) {
 			continue;
 		}
-		if (std::strcmp(e->Name(), "images") == 0) {
-			data.images = read_images(e);
-		} else if (std::strcmp(e->Name(), "contour") == 0) {
+		if (std::strcmp(e->Name(), "contour") == 0) {
 			data.contours.push_back(read_contour(e));
 		} else if (std::strcmp(e->Name(), "tree") == 0) {
 			data.trees.push_back(read_tree(e));
@@ -253,7 +251,7 @@ void write_image(const Image &image, tinyxml2::XMLDocument &doc, tinyxml2::XMLEl
 
 	XMLElement *zspacing = doc.NewElement("zspacing");
 	zspacing->SetAttribute("z", image.z_spacing);
-	zspacing->SetAttribute("slices", static_cast<unsigned>(image.slices));
+	zspacing->SetAttribute("slices", static_cast<int>(image.slices));
 	e->InsertEndChild(zspacing);
 
 	parent->InsertEndChild(e);

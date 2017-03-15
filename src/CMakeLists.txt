@@ -10,5 +10,14 @@ if (NLXML_TRANSFORMER)
 	include_directories(${GLM_INCLUDE_DIRS})
 	add_executable(nlxml_transformer nlxml_transformer.cpp)
 	target_link_libraries(nlxml_transformer nlxml)
+
+	add_executable(nlxml_simplifier nlxml_simplifier.cpp)
+	target_link_libraries(nlxml_simplifier nlxml)
+
+endif()
+
+if (NLXML_DIADEM_MISSED)
+	add_executable(nlxml_diadem_missed nlxml_diadem_missed.cpp)
+	target_link_libraries(nlxml_diadem_missed nlxml)
 endif()
 
