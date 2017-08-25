@@ -1,13 +1,9 @@
-cmake_minimum_required(VERSION 2.8)
-project(NLXML)
-
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${NLXML_SOURCE_DIR}/cmake")
+cmake_minimum_required(VERSION 3.5)
+project(nlxml)
 
 # Bump up warning levels appropriately for each compiler
 if (UNIX OR APPLE OR MINGW)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -std=c++11 -m64")
-	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG}")
-	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE} -O3")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
 elseif (MSVC)
 	add_definitions(-DNOMINMAX)
 	if (CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
@@ -15,15 +11,28 @@ elseif (MSVC)
 	else()
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3 /Zi")
 	endif()
-	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG}")
 endif()
 
-add_subdirectory(src)
+add_library(nlxml nlxml.cpp tinyxml2.cpp)
+set_target_properties(nlxml PROPERTIES
+	POSITION_INDEPENDENT_CODE ON
+	CXX_STANDARD_REQUIRED 11
+)
+target_include_directories(nlxml PUBLIC
+	$<BUILD_INTERFACE:${nlxml_SOURCE_DIR}>
+	$<INSTALL_INTERFACE:include>
+)
 
-if (NLXML_VL_PLUGIN)
-	get_plugin_name(plugin_name "nlxml")
-	add_library(${plugin_name} MODULE nlxml_plugin.cpp marker_renderer.cpp)
-	target_link_libraries(${plugin_name} vl nlxml)
-	install(TARGETS ${plugin_name} DESTINATION bin)
-endif()
+install(TARGETS nlxml EXPORT nlxmlConfig
+	LIBRARY DESTINATION lib
+	ARCHIVE DESTINATION lib
+	RUNTIME DESTINATION bin
+	INCLUDES DESTINATION include
+)
+install(FILES nlxml.h
+	DESTINATION include
+)
+install(EXPORT nlxmlConfig
+	DESTINATION lib/cmake/nlxml
+)
 
