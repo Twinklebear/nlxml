@@ -60,7 +60,6 @@ Contour read_contour(const tinyxml2::XMLElement *e) {
 }
 Branch read_branch(const tinyxml2::XMLElement *e) {
 	using namespace tinyxml2;
-	// TODO: Need to recurse on branches
 	Branch b;
 	if (e->Attribute("leaf")) {
 		b.leaf = e->Attribute("leaf");
@@ -122,7 +121,7 @@ NeuronData import_file(const std::string &fname) {
 	XMLElement *mbf_root = doc.FirstChildElement();
 	NeuronData data;
 	for (XMLElement *e = mbf_root->FirstChildElement(); e != nullptr; e = e->NextSiblingElement()) {
-		// TODO: why is this necessary?
+		// TODO: why is this necessary? Is it?
 		if (!e) {
 			continue;
 		}
@@ -143,8 +142,6 @@ NeuronData import_file(const std::string &fname) {
 	return data;
 }
 
-
-// exporting to xml
 void write_point(const Point &p, tinyxml2::XMLDocument &doc, tinyxml2::XMLElement *const parent) {
 	using namespace tinyxml2;
 	XMLElement *const e = doc.NewElement("point");
@@ -255,15 +252,6 @@ void write_image(const Image &image, tinyxml2::XMLDocument &doc, tinyxml2::XMLEl
 	e->InsertEndChild(zspacing);
 
 	parent->InsertEndChild(e);
-}
-void write_images(const std::vector<Image> &images,  tinyxml2::XMLDocument &doc, tinyxml2::XMLElement *const parent) {
-	tinyxml2::XMLElement *const e = doc.NewElement("images");
-
-	for (const auto &image : images) {
-		write_image(image, doc, e);
-	}
-
-    parent->InsertEndChild(e);
 }
 void export_file(const NeuronData &data, const std::string &fname) {
 	using namespace tinyxml2;

@@ -21,8 +21,6 @@ struct Color {
 };
 
 struct Marker {
-	// TODO: There's a fixed # of marker types which specify which glyph
-	// should be displayed.
 	std::string type;
 	std::string name;
 	Color color;
@@ -63,7 +61,6 @@ struct Contour {
 	bool closed;
 	// TODO: Do we care about the <property>'s in the file?
 	std::vector<Point> points;
-	// TODO: Can a contour have markers? Probably
 	std::vector<Marker> markers;
 };
 
