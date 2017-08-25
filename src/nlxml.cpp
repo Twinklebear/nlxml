@@ -95,34 +95,25 @@ Tree read_tree(const tinyxml2::XMLElement *e) {
 	}
 	return t;
 }
-Image read_image(const tinyxml2::XMLElement *const e) {
+Image read_image(const tinyxml2::XMLElement *e) {
 	using namespace tinyxml2;
-
-	Image image;
+	Image i;
 	for (const XMLElement *it = e->FirstChildElement(); it != nullptr; it = it->NextSiblingElement()) {
-		if (std::strcmp(it->Name(), "scale") == 0) {
-			image.scale.x = it->DoubleAttribute("x");
-			image.scale.y = it->DoubleAttribute("y");
+		if (std::strcmp(it->Name(), "filename") == 0) {
+			i.filenames.push_back(it->GetText());
+		} else if (std::strcmp(it->Name(), "scale") == 0) {
+			i.scale[0] = it->FloatAttribute("x");
+			i.scale[1] = it->FloatAttribute("y");
 		} else if (std::strcmp(it->Name(), "coord") == 0) {
-			image.coord.x = it->DoubleAttribute("x");
-			image.coord.y = it->DoubleAttribute("y");
-			image.coord.z = it->DoubleAttribute("z");
+			i.coord[0] = it->FloatAttribute("x");
+			i.coord[1] = it->FloatAttribute("y");
+			i.coord[2] = it->FloatAttribute("z");
 		} else if (std::strcmp(it->Name(), "zspacing") == 0) {
-			image.zspacing.z = it->DoubleAttribute("z");
+			i.z_spacing = it->FloatAttribute("z");
+			i.slices = it->UnsignedAttribute("slices");
 		}
 	}
-	return image;
-}
-std::vector<Image> read_images(const tinyxml2::XMLElement *const e) {
-	using namespace tinyxml2;
-
-	std::vector<Image> images;
-	for (const XMLElement *it = e->FirstChildElement(); it != nullptr; it = it->NextSiblingElement()) {
-		if (std::strcmp(it->Name(), "image") == 0) {
-			images.emplace_back(read_image(it));
-		}
-	}
-	return images;
+	return i;
 }
 NeuronData import_file(const std::string &fname) {
 	using namespace tinyxml2;
@@ -143,6 +134,12 @@ NeuronData import_file(const std::string &fname) {
 			data.trees.push_back(read_tree(e));
 		} else if (std::strcmp(e->Name(), "marker") == 0) {
 			data.markers.push_back(read_marker(e));
+		} else if (std::strcmp(e->Name(), "images") == 0) {
+			for (const XMLElement *it = e->FirstChildElement(); it != nullptr; it = it->NextSiblingElement()) {
+				if (std::strcmp(it->Name(), "image") == 0) {
+					data.images.push_back(read_image(it));
+				}
+			}
 		}
 	}
 	return data;
@@ -217,26 +214,6 @@ void write_tree(const Tree &tree, tinyxml2::XMLDocument &doc, tinyxml2::XMLEleme
 		write_marker(m, doc, e);
 
 	parent->InsertEndChild(e);
-}
-void write_image(const Image &image, tinyxml2::XMLDocument &doc, tinyxml2::XMLElement *const parent) {
-	tinyxml2::XMLElement *const e = doc.NewElement("image");
-
-    tinyxml2::XMLElement *const scale = doc.NewElement("scale");
-    scale->SetAttribute("x", image.scale.x);
-    scale->SetAttribute("y", image.scale.y);
-    e->InsertEndChild(scale);
-
-    tinyxml2::XMLElement *const coord = doc.NewElement("coord");
-    coord->SetAttribute("x", image.coord.x);
-    coord->SetAttribute("y", image.coord.y);
-    coord->SetAttribute("z", image.coord.z);
-    e->InsertEndChild(coord);
-
-    tinyxml2::XMLElement *const zspacing = doc.NewElement("zspacing");
-    zspacing->SetAttribute("z", image.zspacing.z);
-    e->InsertEndChild(zspacing);
-
-    parent->InsertEndChild(e);
 }
 void write_images(const std::vector<Image> &images,  tinyxml2::XMLDocument &doc, tinyxml2::XMLElement *const parent) {
 	tinyxml2::XMLElement *const e = doc.NewElement("images");
@@ -343,6 +320,17 @@ std::ostream& operator<<(std::ostream &os, const nlxml::Marker &m) {
 		os << p << ", ";
 	}
 	os << "\n}";
+	return os;
+}
+std::ostream& operator<<(std::ostream &os, const nlxml::Image &i) {
+	os << "Image {\nscale = [" << i.scale[0] << ", " << i.scale[1] << "]\n"
+		<< "coord = [" << i.coord[0] << ", " << i.coord[1] << ", " << i.coord[2]
+		<< "]\nzspacing = " << i.z_spacing << "\nslices = " << i.slices
+		<< "\nfiles = [\n";
+	for (const auto &f : i.filenames) {
+		os << f << ",\n";
+	}
+	os << "]\n";
 	return os;
 }
 

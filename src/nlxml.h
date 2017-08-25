@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <array>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -67,9 +68,13 @@ struct Contour {
 };
 
 struct Image {
-	struct { double x, y; } scale;
-	struct { double x, y, z; } coord;
-	struct { double z; } zspacing;
+	std::vector<std::string> filenames;
+	// x, y scaling values
+	std::array<float, 2> scale;
+	// x, y, z translation values
+	std::array<float, 3> coord;
+	float z_spacing;
+	size_t slices;
 };
 
 struct NeuronData {
@@ -91,4 +96,5 @@ std::ostream& operator<<(std::ostream &os, const nlxml::Branch &b);
 std::ostream& operator<<(std::ostream &os, const nlxml::Tree &t);
 std::ostream& operator<<(std::ostream &os, const nlxml::Contour &c);
 std::ostream& operator<<(std::ostream &os, const nlxml::Marker &m);
+std::ostream& operator<<(std::ostream &os, const nlxml::Image &i);
 
