@@ -66,7 +66,14 @@ struct Contour {
 	std::vector<Marker> markers;
 };
 
+struct Image {
+	struct { double x, y; } scale;
+	struct { double x, y, z; } coord;
+	struct { double z; } zspacing;
+};
+
 struct NeuronData {
+	std::vector<Image> images;
 	std::vector<Tree> trees;
 	std::vector<Contour> contours;
 	std::vector<Marker> markers;

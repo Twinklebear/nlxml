@@ -95,6 +95,35 @@ Tree read_tree(const tinyxml2::XMLElement *e) {
 	}
 	return t;
 }
+Image read_image(const tinyxml2::XMLElement *const e) {
+	using namespace tinyxml2;
+
+	Image image;
+	for (const XMLElement *it = e->FirstChildElement(); it != nullptr; it = it->NextSiblingElement()) {
+		if (std::strcmp(it->Name(), "scale") == 0) {
+			image.scale.x = it->DoubleAttribute("x");
+			image.scale.y = it->DoubleAttribute("y");
+		} else if (std::strcmp(it->Name(), "coord") == 0) {
+			image.coord.x = it->DoubleAttribute("x");
+			image.coord.y = it->DoubleAttribute("y");
+			image.coord.z = it->DoubleAttribute("z");
+		} else if (std::strcmp(it->Name(), "zspacing") == 0) {
+			image.zspacing.z = it->DoubleAttribute("z");
+		}
+	}
+	return image;
+}
+std::vector<Image> read_images(const tinyxml2::XMLElement *const e) {
+	using namespace tinyxml2;
+
+	std::vector<Image> images;
+	for (const XMLElement *it = e->FirstChildElement(); it != nullptr; it = it->NextSiblingElement()) {
+		if (std::strcmp(it->Name(), "image") == 0) {
+			images.emplace_back(read_image(it));
+		}
+	}
+	return images;
+}
 NeuronData import_file(const std::string &fname) {
 	using namespace tinyxml2;
 	XMLDocument doc;
@@ -102,10 +131,13 @@ NeuronData import_file(const std::string &fname) {
 	XMLElement *mbf_root = doc.FirstChildElement();
 	NeuronData data;
 	for (XMLElement *e = mbf_root->FirstChildElement(); e != nullptr; e = e->NextSiblingElement()) {
+		// TODO: why is this necessary?
 		if (!e) {
 			continue;
 		}
-		if (std::strcmp(e->Name(), "contour") == 0) {
+		if (std::strcmp(e->Name(), "images") == 0) {
+			data.images = read_images(e);
+		} else if (std::strcmp(e->Name(), "contour") == 0) {
 			data.contours.push_back(read_contour(e));
 		} else if (std::strcmp(e->Name(), "tree") == 0) {
 			data.trees.push_back(read_tree(e));
@@ -186,6 +218,35 @@ void write_tree(const Tree &tree, tinyxml2::XMLDocument &doc, tinyxml2::XMLEleme
 
 	parent->InsertEndChild(e);
 }
+void write_image(const Image &image, tinyxml2::XMLDocument &doc, tinyxml2::XMLElement *const parent) {
+	tinyxml2::XMLElement *const e = doc.NewElement("image");
+
+    tinyxml2::XMLElement *const scale = doc.NewElement("scale");
+    scale->SetAttribute("x", image.scale.x);
+    scale->SetAttribute("y", image.scale.y);
+    e->InsertEndChild(scale);
+
+    tinyxml2::XMLElement *const coord = doc.NewElement("coord");
+    coord->SetAttribute("x", image.coord.x);
+    coord->SetAttribute("y", image.coord.y);
+    coord->SetAttribute("z", image.coord.z);
+    e->InsertEndChild(coord);
+
+    tinyxml2::XMLElement *const zspacing = doc.NewElement("zspacing");
+    zspacing->SetAttribute("z", image.zspacing.z);
+    e->InsertEndChild(zspacing);
+
+    parent->InsertEndChild(e);
+}
+void write_images(const std::vector<Image> &images,  tinyxml2::XMLDocument &doc, tinyxml2::XMLElement *const parent) {
+	tinyxml2::XMLElement *const e = doc.NewElement("images");
+
+	for (const auto &image : images) {
+		write_image(image, doc, e);
+	}
+
+    parent->InsertEndChild(e);
+}
 void export_file(const NeuronData &data, const std::string &fname) {
 	using namespace tinyxml2;
 	XMLDocument doc;
@@ -197,6 +258,8 @@ void export_file(const NeuronData &data, const std::string &fname) {
 	mbf->SetAttribute("xmlns", "http://www.mbfbioscience.com/2007/neurolucida");
 	mbf->SetAttribute("xmlns:nl", "http://www.mbfbioscience.com/2007/neurolucida");
 	doc.LinkEndChild(mbf);
+
+    write_images(data.images, doc, mbf);
 
 	for (auto &t : data.trees)
 		write_tree(t, doc, mbf);
