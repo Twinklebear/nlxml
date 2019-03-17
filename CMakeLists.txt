@@ -69,3 +69,5 @@ else()
 install(FILES ${CMAKE_BINARY_DIR}/_NLXMLBindings.so DESTINATION ${CMAKE_INSTALL_PREFIX})
 endif()
 
+add_subdirectory(utils)
+
