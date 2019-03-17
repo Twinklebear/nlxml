@@ -120,7 +120,7 @@ NeuronData import_file(const std::string &fname) {
 	XMLDocument doc;
 	auto result = doc.LoadFile(fname.c_str());
 	if (result != XML_SUCCESS) {
-		throw std::runtime_error("Error: XML file " + fname + " does not exist");
+		throw std::runtime_error("Error: XML file " + fname + " does not exist, or is unreadable");
 	}
 	XMLElement *mbf_root = doc.FirstChildElement();
 	NeuronData data;
