@@ -36,3 +36,5 @@ install(EXPORT nlxmlConfig
 	DESTINATION lib/cmake/nlxml
 )
 
+add_subdirectory(utils)
+
