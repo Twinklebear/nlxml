@@ -1,12 +1,20 @@
 %module NLXMLBindings
 
-%include <exception.i>
-
 %feature("autodoc","3");
 
 %include "std_string.i"
 %include "std_vector.i"
 %include "stdint.i"
+
+%include "exception.i"
+
+%exception {
+  try {
+    $action
+  } catch (const std::exception& e) {
+    SWIG_exception(SWIG_RuntimeError, e.what());
+  }
+}
 
 %{
 #include "./nlxml.h"
