@@ -100,13 +100,15 @@ size_t write_branch_swc(std::ostream &os, const B &b, int parent_id, size_t poin
 }
 
 int main(int argc, char **argv) {
-	std::string input, output;
+	std::string input, output, output_xml;
 	bool apply_file_tfm = false;
 	glm::mat4 user_translation(1.f);
 	glm::mat4 user_scale(1.f);
 	for (int i = 1; i < argc; ++i) {
 		if (std::strcmp(argv[i], "-o") == 0) {
 			output = argv[++i];
+		} else if (std::strcmp(argv[i], "-oxml") == 0) {
+			output_xml = argv[++i];
 		} else if (std::strcmp(argv[i], "-apply") == 0) {
 			apply_file_tfm = true;
 		} else if (std::strcmp(argv[i], "-translate") == 0) {
@@ -125,9 +127,9 @@ int main(int argc, char **argv) {
 			input = argv[i];
 		}
 	}
-	if (input.empty() || output.empty()) {
+	if (input.empty() || (output.empty() && output_xml.empty())) {
 		std::cout << "Error: an input and output file are needed.\n"
-			<< "Usage: ./" << argv[0] << " <input> -o <output>\n";
+			<< "Usage: ./" << argv[0] << " <input> -o <output> [-oxml <output>]\n";
 		return 1;
 	}
 
@@ -176,15 +178,22 @@ int main(int argc, char **argv) {
 	 * P indicates the parent (the integer label) of the current point
 	 * or -1 to indicate an origin (soma). 
 	 */
-	std::ofstream fout(output.c_str());
-	fout << "# Converted from NLXML file " << input << "\n";
-	if (data.trees.size() > 1) {
-		std::cout << "There should just be one tree!\n";
+	if (!output.empty()) {
+		std::ofstream fout(output.c_str());
+		fout << "# Converted from NLXML file " << input << "\n";
+		if (data.trees.size() > 1) {
+			std::cout << "There should just be one tree!\n";
+		}
+
+		size_t point_id = 1;
+		for (const auto &t : data.trees) {
+			point_id = write_branch_swc(fout, t, -1, point_id);
+		}
 	}
 
-	size_t point_id = 1;
-	for (const auto &t : data.trees) {
-		point_id = write_branch_swc(fout, t, -1, point_id);
+	if (!output_xml.empty()) {
+		std::cout << "Exporting transformed NLXML file " << output_xml << "\n";
+		export_file(data, output_xml);
 	}
 	return 0;
 }
