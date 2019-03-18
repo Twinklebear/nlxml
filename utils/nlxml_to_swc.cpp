@@ -143,7 +143,7 @@ int main(int argc, char **argv) {
 	}
 
 	glm::mat4 file_mat(1);
-	if (apply_file_tfm) {
+	if (apply_file_tfm && !data.images.empty()) {
 		file_mat = glm::translate(glm::vec3(data.images[0].coord[0], data.images[0].coord[1], data.images[0].coord[2]))
 			* glm::scale(glm::vec3(data.images[0].scale[0], data.images[0].scale[1], data.images[0].z_spacing));
 	}
