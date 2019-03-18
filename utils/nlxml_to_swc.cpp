@@ -179,6 +179,7 @@ int main(int argc, char **argv) {
 	 * or -1 to indicate an origin (soma). 
 	 */
 	if (!output.empty()) {
+		std::cout << "Exporting transformed and converted SWC file " << output << "\n";
 		std::ofstream fout(output.c_str());
 		fout << "# Converted from NLXML file " << input << "\n";
 		if (data.trees.size() > 1) {
