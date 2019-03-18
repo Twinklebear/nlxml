@@ -36,45 +36,39 @@ target_include_directories(nlxml PUBLIC
 )
 
 if (BUILD_PYTHON_BINDINGS)
-	set (
-		LIBRARIES
-		${Python3_LIBRARIES}
-		nlxml
-	)
-
 	set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/NLXMLBindings.i PROPERTY CPLUSPLUS ON)
 	set_property(SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/NLXMLBindings.i PROPERTY USE_TARGET_INCLUDE_DIRECTORIES TRUE)
 	swig_add_library(NLXMLBindings TYPE SHARED LANGUAGE python OUTFILE_DIR ${CMAKE_CURRENT_SOURCE_DIR} SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/NLXMLBindings.i)
 	set_target_properties(NLXMLBindings PROPERTIES INSTALL_RPATH "${RPATHS}")
 	set_target_properties(NLXMLBindings PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
-	target_link_libraries(NLXMLBindings PUBLIC ${LIBRARIES})
-
-	install(TARGETS nlxml EXPORT nlxmlConfig
-		LIBRARY DESTINATION lib
-		ARCHIVE DESTINATION lib
-		RUNTIME DESTINATION bin
-		INCLUDES DESTINATION include
-	)
-	install(FILES nlxml.h
-		DESTINATION include
-	)
-	install(EXPORT nlxmlConfig
-		DESTINATION lib/cmake/nlxml
-	)
+	target_link_libraries(NLXMLBindings PUBLIC ${Python3_LIBRARIES} nlxml)
 
 	# Install
 	install(FILES ${CMAKE_BINARY_DIR}/NLXMLBindings.py DESTINATION ${CMAKE_INSTALL_PREFIX})
 
 	if (WIN32) 
-	install(FILES ${CMAKE_BINARY_DIR}/_NLXMLBindings.pyd DESTINATION ${CMAKE_INSTALL_PREFIX})
-	install(FILES ${CMAKE_BINARY_DIR}/_NLXMLBindings.pdb DESTINATION ${CMAKE_INSTALL_PREFIX} OPTIONAL)
+		install(FILES ${CMAKE_BINARY_DIR}/_NLXMLBindings.pyd DESTINATION ${CMAKE_INSTALL_PREFIX})
+		install(FILES ${CMAKE_BINARY_DIR}/_NLXMLBindings.pdb DESTINATION ${CMAKE_INSTALL_PREFIX} OPTIONAL)
 	elseif(APPLE)
-	install(FILES ${CMAKE_BINARY_DIR}/_NLXMLBindings.so DESTINATION ${CMAKE_INSTALL_PREFIX})
+		install(FILES ${CMAKE_BINARY_DIR}/_NLXMLBindings.so DESTINATION ${CMAKE_INSTALL_PREFIX})
 	else()
-	install(FILES ${CMAKE_BINARY_DIR}/_NLXMLBindings.so DESTINATION ${CMAKE_INSTALL_PREFIX})
+		install(FILES ${CMAKE_BINARY_DIR}/_NLXMLBindings.so DESTINATION ${CMAKE_INSTALL_PREFIX})
 	endif()
 
 endif()
+
+install(TARGETS nlxml EXPORT nlxmlConfig
+	LIBRARY DESTINATION lib
+	ARCHIVE DESTINATION lib
+	RUNTIME DESTINATION bin
+	INCLUDES DESTINATION include
+)
+install(FILES nlxml.h
+	DESTINATION include
+)
+install(EXPORT nlxmlConfig
+	DESTINATION lib/cmake/nlxml
+)
 
 add_subdirectory(utils)
 
