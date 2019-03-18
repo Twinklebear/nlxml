@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <algorithm>
 #include <iostream>
+#include <stdexcept>
 #include "tinyxml2.h"
 #include "nlxml.h"
 
@@ -117,7 +118,10 @@ Image read_image(const tinyxml2::XMLElement *e) {
 NeuronData import_file(const std::string &fname) {
 	using namespace tinyxml2;
 	XMLDocument doc;
-	doc.LoadFile(fname.c_str());
+	auto result = doc.LoadFile(fname.c_str());
+	if (result != XML_SUCCESS) {
+		throw std::runtime_error("Error: XML file " + fname + " does not exist, or is unreadable");
+	}
 	XMLElement *mbf_root = doc.FirstChildElement();
 	NeuronData data;
 	for (XMLElement *e = mbf_root->FirstChildElement(); e != nullptr; e = e->NextSiblingElement()) {
