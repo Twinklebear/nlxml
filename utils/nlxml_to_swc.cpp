@@ -197,6 +197,7 @@ int main(int argc, char **argv) {
 		for (auto &img : data.images) {
 			img.coord.fill(0.f);
 			img.scale.fill(1.f);
+			img.z_spacing = 1.f;
 		}
 		export_file(data, output_xml);
 	}
