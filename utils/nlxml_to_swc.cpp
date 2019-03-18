@@ -194,6 +194,10 @@ int main(int argc, char **argv) {
 
 	if (!output_xml.empty()) {
 		std::cout << "Exporting transformed NLXML file " << output_xml << "\n";
+		for (auto &img : data.images) {
+			img.coord.fill(0.f);
+			img.scale.fill(1.f);
+		}
 		export_file(data, output_xml);
 	}
 	return 0;
