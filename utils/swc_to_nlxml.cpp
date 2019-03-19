@@ -1,4 +1,6 @@
 #include <iostream>
+#include <set>
+#include <map>
 #include <iterator>
 #include <vector>
 #include <sstream>
@@ -43,12 +45,26 @@ using namespace nlxml;
  */
 
 struct SWCPoint {
-	int id;
-	int type;
-	float x, y, z;
-	float radius;
-	int parent_id;
+	int id = 0;
+	int type = 0;
+	float x = 0;
+	float y = 0;
+	float z = 0;
+	float radius = 0;
+	int parent_id = 0;
+	int children = 0;
 };
+
+std::ostream& operator<<(std::ostream &os, const SWCPoint &p) {
+	os << "(" << p.id << ", " << p.type << ", ["
+		<< p.x << ", " << p.y << ", " << p.z << "], "
+		<< p.radius << ", " << p.parent_id << ", {" << p.children << "})";
+	return os;
+}
+
+bool operator<(const SWCPoint &a, const SWCPoint &b) {
+	return a.id < b.id;
+}
 
 SWCPoint read_point(const std::string &l) {
 	std::istringstream iss(l);
@@ -61,98 +77,100 @@ SWCPoint read_point(const std::string &l) {
 	p.x = std::stof(vals[2]);
 	p.y = std::stof(vals[3]);
 	p.z = std::stof(vals[4]);
-	p.radius = std::stof(vals[5]);
+	p.radius = p.id;// debugging std::stof(vals[5]);
 	p.parent_id = std::stoi(vals[6]);
 	return p;
 }
 
-size_t depth = 1;
+// Points in the map are indexed by their parent ID, with a set of
+// all points who are parented by that point
+using SWCMap = std::map<int, std::set<SWCPoint>>;
 
-// Returns the next line to be read, since in the format we
-// don't know if we're done until we actually go past it
 template<typename T>
-std::string import_swc_tree(std::istream &is, T &branch, std::string line) {
-	std::string indent(depth, '\t');
-	depth += 1;
-	do {
-		if (line.empty() || line[0] == '#') {
-			continue;
-		}
+void convert_swc_branch(T &branch, const SWCPoint parent,
+		const std::set<SWCPoint> &children, const SWCMap &swcpoints)
+{
+	for (auto c = children.cbegin(); c != children.cend(); ++c) {
+		SWCPoint child = *c;
+		branch.points.push_back(Point(child.x, child.y, child.z, child.radius));
 
-		SWCPoint p = read_point(line);
-		if (p.parent_id == -1 || p.type == 1) {
-			depth -= 1;
-			return line;
-		}
-
-		if (p.type == 6) {
-			// This branch has ended, we're done
-			branch.points.push_back(Point(p.x, p.y, p.z, p.radius));
-			return "";
-		} else if (p.type == 5) {
-			// We've got a child branch starting at the point we read,
-			// so build all the branches we split into
-			branch.points.push_back(Point(p.x, p.y, p.z, p.radius));
-			int branch_point_id = p.id;
-			line.clear();
-			// We'll either get back a line from a child when it encounters a
-			// new branch that it's not the parent of, or we get an empty line
-			// back and keep reading our own branches
-			while (!line.empty() || std::getline(is, line)) {
-				p = read_point(line);
-				// Check if we're actually the parent of this point we read
-				if (p.parent_id != branch_point_id) {
-					return line;
-				}
-
+		auto child_children = swcpoints.find(child.id);
+		if (child_children == swcpoints.end() || child_children->second.empty()) {
+			return;
+		} else if (child_children->second.size() == 1) {
+			convert_swc_branch(branch, child, child_children->second, swcpoints);
+		} else {
+			// We're branching into the child's children
+			for (auto branches = child_children->second.cbegin();
+					branches != child_children->second.cend(); ++branches)
+			{
 				Branch b;
-				b.leaf = "Normal";
-				// The child branches won't return anything to us, since they terminate
-				// when they read their end point
-				line = import_swc_tree(is, b, line);
+				SWCPoint bstart = *branches;
+				b.points.push_back(Point(bstart.x, bstart.y, bstart.z, bstart.radius));
+				auto bpoints = swcpoints.find(bstart.id);
+				if (bpoints != swcpoints.end()) {
+					convert_swc_branch(b, bstart, bpoints->second, swcpoints);
+				}
 				branch.branches.push_back(b);
 			}
-			// This branch ends here, since it forked into two or more branches
-			return "";
-		} else {
-			branch.points.push_back(Point(p.x, p.y, p.z, p.radius));
 		}
-	} while (std::getline(is, line));
-	return line;
+	}
 }
 
-NeuronData import_swc(const std::string &fname) {
+NeuronData convert_swc(const SWCMap &swcpoints) {
 	NeuronData data;
 
-	std::ifstream fin(fname.c_str());
-	
-	std::string line;
-	while (!line.empty() || std::getline(fin, line)) {
-		if (line.empty() || line[0] == '#') {
-			line.clear();
-			continue;
+	auto treeiter = swcpoints.find(-1);
+	if (treeiter == swcpoints.end()) {
+		std::cout << "No trees in file!?\n";
+		return data;
+	}
+
+	auto trees = treeiter->second;
+	for (auto it = trees.begin(); it != trees.end(); ++it) {
+		const SWCPoint p = *it;
+		Tree t;
+		t.color = Color(1, 1, 1);
+		switch (p.type) {
+			case 1: t.type = "Soma"; break;
+			case 2: t.type = "Axon"; break;
+			case 3: t.type = "Dendrite"; break;
+			case 4: t.type = "Apical Dendrite"; break;
+			case 7: t.type = "Custom"; break;
+			default: t.type = "Undefined";
 		}
-		SWCPoint p = read_point(line);
+		t.leaf = "Normal";
+		t.points.push_back(Point(p.x, p.y, p.z, p.radius));
 
-		// Start of a new tree
-		if (p.id == 1 || p.parent_id == -1 || p.type == 1) {
-			Tree t;
-			t.color = Color(1, 1, 1);
-			t.type = "Axon";
-			t.leaf = "Normal";
-			t.points.push_back(Point(p.x, p.y, p.z, p.radius));
-
-			if (std::getline(fin, line)) {
-				line = import_swc_tree(fin, t, line);
+		auto children = swcpoints.find(p.id);
+		if (children != swcpoints.end()) {
+			std::cout << "tree parent id " << p.id << " has children: {\n";
+			for (auto &p : children->second) {
+				std::cout << "  " << p << "\n";
 			}
-			data.trees.push_back(t);
-		} else {
-			std::cout << "Unexpected normal point?? " << line << "\n";
-			break;
+			std::cout << "}\n";
+
+			convert_swc_branch(t, p, children->second, swcpoints);
 		}
+		data.trees.push_back(t);
 	}
 
 	return data;
+}
+
+SWCMap import_swc(const std::string &fname) {
+	std::ifstream fin(fname.c_str());
+	
+	SWCMap points;
+	std::string line;
+	while (std::getline(fin, line)) {
+		if (line.empty() || line[0] == '#') {
+			continue;
+		}
+		SWCPoint p = read_point(line);
+		points[p.parent_id].insert(p);
+	}
+	return points;
 }
 
 int main(int argc, char **argv) {
@@ -171,7 +189,10 @@ int main(int argc, char **argv) {
 	}
 
 	std::cout << "Exporting SWC file as NLXML to " << output << "\n";
-	export_file(import_swc(input), output);
+	auto swcpoints = import_swc(input);
+
+	auto data = convert_swc(swcpoints);
+	export_file(data, output);
 
 	return 0;
 }
