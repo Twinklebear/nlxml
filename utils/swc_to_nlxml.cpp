@@ -77,7 +77,7 @@ SWCPoint read_point(const std::string &l) {
 	p.x = std::stof(vals[2]);
 	p.y = std::stof(vals[3]);
 	p.z = std::stof(vals[4]);
-	p.radius = p.id;// debugging std::stof(vals[5]);
+	p.radius = std::stof(vals[5]);
 	p.parent_id = std::stoi(vals[6]);
 	return p;
 }
@@ -90,29 +90,25 @@ template<typename T>
 void convert_swc_branch(T &branch, const SWCPoint parent,
 		const std::set<SWCPoint> &children, const SWCMap &swcpoints)
 {
-	for (auto c = children.cbegin(); c != children.cend(); ++c) {
-		SWCPoint child = *c;
+	if (children.size() > 1) {
+		for (auto branches = children.cbegin(); branches != children.cend(); ++branches) {
+			Branch b;
+			b.leaf = "Normal";
+			SWCPoint bstart = *branches;
+			b.points.push_back(Point(bstart.x, bstart.y, bstart.z, bstart.radius));
+			auto bpoints = swcpoints.find(bstart.id);
+			if (bpoints != swcpoints.end()) {
+				convert_swc_branch(b, bstart, bpoints->second, swcpoints);
+			}
+			branch.branches.push_back(b);
+		}
+	} else if (children.size() == 1) {
+		SWCPoint child = *children.cbegin();
 		branch.points.push_back(Point(child.x, child.y, child.z, child.radius));
 
 		auto child_children = swcpoints.find(child.id);
-		if (child_children == swcpoints.end() || child_children->second.empty()) {
-			return;
-		} else if (child_children->second.size() == 1) {
+		if (child_children != swcpoints.end() && !child_children->second.empty()) {
 			convert_swc_branch(branch, child, child_children->second, swcpoints);
-		} else {
-			// We're branching into the child's children
-			for (auto branches = child_children->second.cbegin();
-					branches != child_children->second.cend(); ++branches)
-			{
-				Branch b;
-				SWCPoint bstart = *branches;
-				b.points.push_back(Point(bstart.x, bstart.y, bstart.z, bstart.radius));
-				auto bpoints = swcpoints.find(bstart.id);
-				if (bpoints != swcpoints.end()) {
-					convert_swc_branch(b, bstart, bpoints->second, swcpoints);
-				}
-				branch.branches.push_back(b);
-			}
 		}
 	}
 }
@@ -144,12 +140,6 @@ NeuronData convert_swc(const SWCMap &swcpoints) {
 
 		auto children = swcpoints.find(p.id);
 		if (children != swcpoints.end()) {
-			std::cout << "tree parent id " << p.id << " has children: {\n";
-			for (auto &p : children->second) {
-				std::cout << "  " << p << "\n";
-			}
-			std::cout << "}\n";
-
 			convert_swc_branch(t, p, children->second, swcpoints);
 		}
 		data.trees.push_back(t);
