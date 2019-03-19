@@ -21,3 +21,8 @@ target_link_libraries(nlxml_diadem_missed nlxml)
 add_executable(nlxml_to_swc nlxml_to_swc.cpp)
 set_property(TARGET nlxml_to_swc PROPERTY CXX_STANDARD 14)
 target_link_libraries(nlxml_to_swc nlxml)
+
+add_executable(swc_to_nlxml swc_to_nlxml.cpp)
+set_property(TARGET swc_to_nlxml PROPERTY CXX_STANDARD 14)
+target_link_libraries(swc_to_nlxml nlxml)
+
